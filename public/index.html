@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Notificaciones - Test Client</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .notifications-list {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-item.info {
+            border-left-color: #3b82f6;
+        }
+
+        .notification-item.success {
+            border-left-color: #10b981;
+        }
+
+        .notification-item.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .notification-item.error {
+            border-left-color: #ef4444;
+        }
+
+        .notification-item h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .notification-item p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .notification-item .meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .rooms-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .room-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .room-badge button {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logs {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-time {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Notificaciones en Tiempo Real</h1>
+            <span id="connectionStatus" class="status disconnected">Desconectado</span>
+            <p style="margin-top: 10px; color: #666;">Usuario: <strong id="currentUser">No conectado</strong></p>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <h2>Conectar Usuario</h2>
+                <div class="form-group">
+                    <label>Nombre de Usuario</label>
+                    <input type="text" id="username" placeholder="Ingresa tu nombre de usuario" value="user1">
+                </div>
+                <button onclick="connect()">Conectar</button>
+                <button onclick="disconnect()" style="background: #ef4444; margin-top: 10px;">Desconectar</button>
+            </div>
+
+            <div class="panel">
+                <h2>Gestión de Salas</h2>
+                <div class="form-group">
+                    <label>Nombre de la Sala</label>
+                    <input type="text" id="roomName" placeholder="Ej: sala-general">
+                </div>
+                <button onclick="joinRoom()">Unirse a Sala</button>
+
+                <div style="margin-top: 15px;">
+                    <label>Mis Salas</label>
+                    <div class="rooms-list" id="myRooms">
+                        <span style="color: #999; font-size: 14px;">No estás en ninguna sala</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <h2>Enviar Notificación</h2>
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" id="notifTitle" placeholder="Título de la notificación">
+                </div>
+                <div class="form-group">
+                    <label>Mensaje</label>
+                    <textarea id="notifMessage" placeholder="Contenido de la notificación"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="notifType">
+                        <option value="info">Info</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Enviar a Sala (opcional)</label>
+                    <input type="text" id="notifRoom" placeholder="Nombre de la sala">
+                </div>
+                <div class="form-group">
+                    <label>Enviar a Usuario (opcional)</label>
+                    <input type="text" id="notifUser" placeholder="Nombre del usuario">
+                </div>
+                <button onclick="sendNotification()">Enviar Notificación</button>
+            </div>
+
+            <div class="panel">
+                <h2>Logs del Sistema</h2>
+                <div class="logs" id="systemLogs">
+                    <div class="log-entry">Sistema iniciado...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notifications-list">
+            <h2 style="color: #333; margin-bottom: 15px;">Notificaciones Recibidas</h2>
+            <div id="notificationsList">
+                <p style="color: #999; text-align: center;">No hay notificaciones aún</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        let myRooms = new Set();
+
+        function addLog(message) {
+            const logs = document.getElementById('systemLogs');
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+            logs.insertBefore(logEntry, logs.firstChild);
+
+            while (logs.children.length > 50) {
+                logs.removeChild(logs.lastChild);
+            }
+        }
+
+        function connect() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert('Por favor ingresa un nombre de usuario');
+                return;
+            }
+
+            socket = io('http://localhost:3000', {
+                transports: ['websocket']
+            });
+
+            socket.on('connect', () => {
+                document.getElementById('connectionStatus').className = 'status connected';
+                document.getElementById('connectionStatus').textContent = 'Conectado';
+                document.getElementById('currentUser').textContent = username;
+                addLog(`Conectado como ${username}`);
+            });
+
+            socket.on('disconnect', () => {
+                document.getElementById('connectionStatus').className = 'status disconnected';
+                document.getElementById('connectionStatus').textContent = 'Desconectado';
+                addLog('Desconectado del servidor');
+            });
+
+            socket.on('notification', (notification) => {
+                addNotification(notification);
+                addLog(`Nueva notificación: ${notification.title}`);
+            });
+
+            socket.on('joinedRoom', (data) => {
+                if (data.success) {
+                    myRooms.add(data.roomName);
+                    updateRoomsList();
+                    addLog(`Te uniste a la sala: ${data.roomName}`);
+                }
+            });
+
+            socket.on('leftRoom', (data) => {
+                if (data.success) {
+                    myRooms.delete(data.roomName);
+                    updateRoomsList();
+                    addLog(`Saliste de la sala: ${data.roomName}`);
+                }
+            });
+
+            socket.on('userJoined', (data) => {
+                addLog(`${data.username} se unió a ${data.roomName}`);
+            });
+
+            socket.on('userLeft', (data) => {
+                addLog(`${data.username} salió de ${data.roomName}`);
+            });
+
+            socket.on('error', (error) => {
+                addLog(`Error: ${error.message}`);
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                myRooms.clear();
+                updateRoomsList();
+                document.getElementById('currentUser').textContent = 'No conectado';
+            }
+        }
+
+        function joinRoom() {
+            const roomName = document.getElementById('roomName').value;
+            const username = document.getElementById('username').value;
+
+            if (!roomName) {
+                alert('Por favor ingresa un nombre de sala');
+                return;
+            }
+
+            if (!socket || !socket.connected) {
+                alert('Debes conectarte primero');
+                return;
+            }
+
+            socket.emit('joinRoom', { roomName, username });
+        }
+
+        function leaveRoom(roomName) {
+            const username = document.getElementById('username').value;
+            socket.emit('leaveRoom', { roomName, username });
+        }
+
+        function sendNotification() {
+            if (!socket || !socket.connected) {
+                alert('Debes conectarte primero');
+                return;
+            }
+
+            const title = document.getElementById('notifTitle').value;
+            const message = document.getElementById('notifMessage').value;
+            const type = document.getElementById('notifType').value;
+            const roomName = document.getElementById('notifRoom').value;
+            const username = document.getElementById('notifUser').value;
+
+            if (!title || !message) {
+                alert('Por favor completa título y mensaje');
+                return;
+            }
+
+            const notification = {
+                title,
+                message,
+                type,
+            };
+
+            if (roomName) notification.roomName = roomName;
+            if (username) notification.username = username;
+
+            socket.emit('sendNotification', notification);
+
+            document.getElementById('notifTitle').value = '';
+            document.getElementById('notifMessage').value = '';
+            addLog(`Notificación enviada: ${title}`);
+        }
+
+        function addNotification(notification) {
+            const list = document.getElementById('notificationsList');
+
+            if (list.children[0]?.tagName === 'P') {
+                list.innerHTML = '';
+            }
+
+            const item = document.createElement('div');
+            item.className = `notification-item ${notification.type}`;
+            item.innerHTML = `
+                <h4>${notification.title}</h4>
+                <p>${notification.message}</p>
+                <div class="meta">
+                    Tipo: ${notification.type} |
+                    Estado: ${notification.status} |
+                    ${new Date(notification.createdAt).toLocaleString()}
+                </div>
+            `;
+
+            list.insertBefore(item, list.firstChild);
+        }
+
+        function updateRoomsList() {
+            const roomsList = document.getElementById('myRooms');
+
+            if (myRooms.size === 0) {
+                roomsList.innerHTML = '<span style="color: #999; font-size: 14px;">No estás en ninguna sala</span>';
+                return;
+            }
+
+            roomsList.innerHTML = '';
+            myRooms.forEach(room => {
+                const badge = document.createElement('div');
+                badge.className = 'room-badge';
+                badge.innerHTML = `
+                    ${room}
+                    <button onclick="leaveRoom('${room}')">×</button>
+                `;
+                roomsList.appendChild(badge);
+            });
+        }
+    </script>
+</body>
+</html>
