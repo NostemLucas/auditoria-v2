@@ -13,7 +13,7 @@ export class DataSanitizer {
 
   static sanitize(data: Record<string, unknown>): Record<string, unknown> {
     if (!data || typeof data !== 'object') {
-      return data
+      return {}
     }
 
     const sanitized: Record<string, unknown> = {}
@@ -26,7 +26,7 @@ export class DataSanitizer {
       } else if (value && typeof value === 'object' && !Array.isArray(value)) {
         sanitized[key] = this.sanitize(value as Record<string, unknown>)
       } else if (Array.isArray(value)) {
-        sanitized[key] = value.map((item) =>
+        sanitized[key] = value.map((item: unknown) =>
           typeof item === 'object' && item !== null
             ? this.sanitize(item as Record<string, unknown>)
             : item,

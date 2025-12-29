@@ -25,11 +25,16 @@ export class HttpLogger extends BaseLogger {
         contentType,
         query: req.query as Record<string, unknown>,
         params: req.params as Record<string, unknown>,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         body: req.body ? DataSanitizer.sanitize(req.body) : undefined,
       },
     }
 
-    this.log(LogLevel.HTTP, `Incoming Request: ${req.method} ${req.url}`, context)
+    this.log(
+      LogLevel.HTTP,
+      `Incoming Request: ${req.method} ${req.url}`,
+      context,
+    )
   }
 
   logResponse(

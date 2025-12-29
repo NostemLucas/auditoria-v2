@@ -4,20 +4,20 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
+  ManyToMany,
 } from 'typeorm'
-import { Notification } from './notification.entity'
+import { UserEntity } from './user.entity'
 
-@Entity('rooms')
-export class Room {
+@Entity('roles')
+export class RoleEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
   @Column({ unique: true })
   name: string
 
-  @Column({ type: 'varchar', nullable: true })
-  description: string | null
+  @Column({ nullable: true })
+  description: string
 
   @Column({ default: true })
   isActive: boolean
@@ -28,6 +28,6 @@ export class Room {
   @UpdateDateColumn()
   updatedAt: Date
 
-  @OneToMany(() => Notification, (notification) => notification.room)
-  notifications: Notification[]
+  @ManyToMany(() => UserEntity, (user) => user.roles)
+  users: UserEntity[]
 }

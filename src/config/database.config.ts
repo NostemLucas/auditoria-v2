@@ -1,5 +1,5 @@
-import { registerAs } from '@nestjs/config';
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { registerAs } from '@nestjs/config'
+import { TypeOrmModuleOptions } from '@nestjs/typeorm'
 
 export default registerAs(
   'database',
@@ -11,7 +11,7 @@ export default registerAs(
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_DATABASE || 'notifications_db',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    synchronize: process.env.NODE_ENV === 'development',
+    synchronize: false, // Usar migrations en lugar de synchronize
     logging: process.env.NODE_ENV === 'development',
   }),
-);
+)

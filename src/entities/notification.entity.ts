@@ -1,6 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
-import { Room } from './room.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm'
+import { UserEntity } from '../users/entities/user.entity'
+import { Room } from './room.entity'
 
 export enum NotificationType {
   INFO = 'info',
@@ -19,51 +26,51 @@ export enum NotificationStatus {
 @Entity('notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string
 
   @Column()
-  title: string;
+  title: string
 
   @Column('text')
-  message: string;
+  message: string
 
   @Column({
     type: 'enum',
     enum: NotificationType,
     default: NotificationType.INFO,
   })
-  type: NotificationType;
+  type: NotificationType
 
   @Column({
     type: 'enum',
     enum: NotificationStatus,
     default: NotificationStatus.PENDING,
   })
-  status: NotificationStatus;
+  status: NotificationStatus
 
   @Column({ type: 'uuid', nullable: true })
-  userId: string | null;
+  userId: string | null
 
-  @ManyToOne(() => User, (user) => user.notifications, { nullable: true })
+  @ManyToOne(() => UserEntity, { nullable: true })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user: UserEntity
 
   @Column({ type: 'uuid', nullable: true })
-  roomId: string | null;
+  roomId: string | null
 
   @ManyToOne(() => Room, (room) => room.notifications, { nullable: true })
   @JoinColumn({ name: 'roomId' })
-  room: Room;
+  room: Room
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata: Record<string, any>;
+  metadata: Record<string, any>
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt: Date
 
   @Column({ type: 'timestamp', nullable: true })
-  readAt: Date | null;
+  readAt: Date | null
 
   @Column({ type: 'timestamp', nullable: true })
-  deliveredAt: Date | null;
+  deliveredAt: Date | null
 }
