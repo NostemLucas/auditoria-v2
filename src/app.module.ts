@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { UsersModule } from './users/users.module'
+import { TemplatesModule } from './templates/templates.module'
 import databaseConfig from './config/database.config'
 import redisConfig from './config/redis.config'
 import { LoggerModule } from '@shared'
@@ -21,6 +22,7 @@ import { LoggerModule } from '@shared'
       inject: [ConfigService],
     }),
     UsersModule,
+    TemplatesModule,
     LoggerModule,
   ],
   controllers: [AppController],

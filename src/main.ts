@@ -27,10 +27,14 @@ async function bootstrap() {
   // Configurar Swagger
   const config = new DocumentBuilder()
     .setTitle('ATR API')
-    .setDescription('API de notificaciones y gestión de usuarios')
+    .setDescription(
+      'API de notificaciones, gestión de usuarios y plantillas de auditoría',
+    )
     .setVersion('1.0')
     .addTag('users', 'Gestión de usuarios')
     .addTag('notifications', 'Sistema de notificaciones')
+    .addTag('templates', 'Gestión de plantillas (ISO 27001, ISO 9001, etc.)')
+    .addTag('standards', 'Gestión de normas con estructura jerárquica')
     .build()
 
   const document = SwaggerModule.createDocument(app, config)
