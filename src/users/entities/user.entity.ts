@@ -10,7 +10,7 @@ import {
   JoinColumn,
 } from 'typeorm'
 import { RoleEntity } from './role.entity'
-import { OrganizationEntity } from './organization.entity'
+import { OrganizationEntity } from '../../organizations/entities/organization.entity'
 
 export enum UserStatus {
   ACTIVE = 'active',

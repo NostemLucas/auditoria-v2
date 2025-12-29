@@ -2,7 +2,7 @@ import { DataSource } from 'typeorm'
 import { Seeder } from 'typeorm-extension'
 import { UserEntity, UserStatus } from '../../users/entities/user.entity'
 import { RoleEntity } from '../../users/entities/role.entity'
-import { OrganizationEntity } from '../../users/entities/organization.entity'
+import { OrganizationEntity } from '../../organizations/entities/organization.entity'
 
 export default class UserSeeder implements Seeder {
   public async run(dataSource: DataSource): Promise<void> {

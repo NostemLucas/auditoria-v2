@@ -10,7 +10,7 @@ import {
 import { Server, Socket } from 'socket.io'
 import { NotificationsService } from './notifications.service'
 import { Logger } from '@nestjs/common'
-import {
+import type {
   JoinRoomData,
   LeaveRoomData,
   SendNotificationData,

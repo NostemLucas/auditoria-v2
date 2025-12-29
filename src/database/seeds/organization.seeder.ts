@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm'
 import { Seeder } from 'typeorm-extension'
-import { OrganizationEntity } from '../../users/entities/organization.entity'
+import { OrganizationEntity } from '../../organizations/entities/organization.entity'
 
 export default class OrganizationSeeder implements Seeder {
   public async run(dataSource: DataSource): Promise<void> {
@@ -16,6 +16,7 @@ export default class OrganizationSeeder implements Seeder {
     const organizations = [
       {
         name: 'Default Organization',
+        nit: '123456789-0',
         description: 'Organización por defecto del sistema',
         address: 'Av. Principal 123',
         phone: '+598 99 123 456',
@@ -24,6 +25,7 @@ export default class OrganizationSeeder implements Seeder {
       },
       {
         name: 'Demo Company',
+        nit: '987654321-1',
         description: 'Empresa de demostración',
         address: 'Calle Secundaria 456',
         phone: '+598 99 654 321',

@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, IsNull } from 'typeorm'
 import { StandardEntity } from '../entities/standard.entity'
 import { CreateStandardDto, UpdateStandardDto } from '../dtos'
 
@@ -48,7 +48,7 @@ export class StandardsService {
     const rootStandards = await this.standardRepository.find({
       where: {
         templateId,
-        parentId: null,
+        parentId: IsNull(),
       },
       relations: ['children'],
       order: { order: 'ASC' },
