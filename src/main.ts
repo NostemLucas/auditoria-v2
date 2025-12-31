@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { LoggerService } from '@shared'
+import { LoggerService } from '@core'
 import { useContainer } from 'class-validator'
 
 async function bootstrap() {
@@ -18,6 +18,17 @@ async function bootstrap() {
 
   // Usar nuestro logger custom
   app.useLogger(logger)
+
+  // Configurar CORS
+  const corsOrigins = process.env.CORS_ORIGIN?.split(',') || [
+    'http://localhost:4200',
+  ]
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: process.env.CORS_CREDENTIALS === 'true',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
 
   // Habilitar validación global
   app.useGlobalPipes(

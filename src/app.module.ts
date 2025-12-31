@@ -3,22 +3,25 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { UsersModule } from './users/users.module'
-import { OrganizationsModule } from './organizations/organizations.module'
-import { TemplatesModule } from './templates/templates.module'
-import { MaturityFrameworksModule } from './maturity-frameworks/maturity-frameworks.module'
-import { AuditsModule } from './audits/audits.module'
-import { ReportsModule } from './reports/reports.module'
-import databaseConfig from './config/database.config'
-import redisConfig from './config/redis.config'
-import googleConfig from './config/google.config'
-import { LoggerModule } from '@shared'
+import { UsersModule } from '@users'
+import { OrganizationsModule } from '@organizations'
+import { TemplatesModule } from '@templates'
+import { MaturityFrameworksModule } from '@frameworks'
+import { AuditsModule } from '@audits'
+import { ReportsModule } from '@reports'
+import databaseConfig from '@core/config/database.config'
+import googleConfig from '@core/config/google.config'
+import { LoggerModule, CoreModule } from '@core'
+import { AuthModule } from '@auth'
+import { AuthorizationModule } from '@authorization'
+import { APP_GUARD } from '@nestjs/core'
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig, googleConfig],
+      load: [databaseConfig, googleConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -26,15 +29,24 @@ import { LoggerModule } from '@shared'
         configService.get('database')!,
       inject: [ConfigService],
     }),
+    CoreModule,
+    LoggerModule,
+    AuthorizationModule,
+    AuthModule,
     UsersModule,
     OrganizationsModule,
     TemplatesModule,
     MaturityFrameworksModule,
     AuditsModule,
     ReportsModule,
-    LoggerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard, // Guard global para proteger todas las rutas por defecto
+    },
+  ],
 })
 export class AppModule {}

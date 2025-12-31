@@ -22,8 +22,30 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@shared": ["src/shared"],
-      "@shared/*": ["src/shared/*"]
+      "@core": ["src/@core"],
+      "@core/*": ["src/@core/*"],
+      "@shared": ["src/@shared"],
+      "@shared/*": ["src/@shared/*"],
+      "@modules": ["src/modules"],
+      "@modules/*": ["src/modules/*"],
+      "@auth": ["src/modules/auth"],
+      "@auth/*": ["src/modules/auth/*"],
+      "@authorization": ["src/modules/authorization"],
+      "@authorization/*": ["src/modules/authorization/*"],
+      "@users": ["src/modules/users"],
+      "@users/*": ["src/modules/users/*"],
+      "@organizations": ["src/modules/organizations"],
+      "@organizations/*": ["src/modules/organizations/*"],
+      "@templates": ["src/modules/templates"],
+      "@templates/*": ["src/modules/templates/*"],
+      "@audits": ["src/modules/audits"],
+      "@audits/*": ["src/modules/audits/*"],
+      "@frameworks": ["src/modules/maturity-frameworks"],
+      "@frameworks/*": ["src/modules/maturity-frameworks/*"],
+      "@reports": ["src/modules/reports"],
+      "@reports/*": ["src/modules/reports/*"],
+      "@notifications": ["src/modules/notifications"],
+      "@notifications/*": ["src/modules/notifications/*"]
     }
   }
 }
