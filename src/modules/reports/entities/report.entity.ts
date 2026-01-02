@@ -15,6 +15,7 @@ export enum ReportType {
   COMPLIANCE_MATRIX = 'compliance_matrix',
   ACTION_PLAN_SUMMARY = 'action_plan_summary',
   EXECUTIVE_SUMMARY = 'executive_summary',
+  CONSOLIDATED_REPORT = 'consolidated_report', // Reporte completo con pesos, scores ponderados, y análisis detallado
 }
 
 export enum ReportStatus {

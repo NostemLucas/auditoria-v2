@@ -276,7 +276,7 @@ export class AuditsService {
       )
     }
 
-    audit.status = AuditStatus.COMPLETADA
+    audit.status = AuditStatus.PENDING_CLOSURE
     audit.endDate = new Date()
 
     return await this.auditRepository.save(audit)
@@ -285,13 +285,13 @@ export class AuditsService {
   async approve(id: string, approverId: string): Promise<AuditEntity> {
     const audit = await this.findOne(id)
 
-    if (audit.status !== AuditStatus.COMPLETADA) {
+    if (audit.status !== AuditStatus.PENDING_CLOSURE) {
       throw new BadRequestException(
-        'Solo se pueden aprobar auditorías completadas',
+        'Solo se pueden aprobar auditorías en estado PENDING_CLOSURE',
       )
     }
 
-    audit.status = AuditStatus.APROBADA
+    audit.status = AuditStatus.CLOSED
     audit.approverId = approverId
 
     return await this.auditRepository.save(audit)

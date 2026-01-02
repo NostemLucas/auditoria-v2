@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { ConfigService } from '@nestjs/config'
+import type { Request } from 'express'
 import type { JwtPayload } from '../interfaces/jwt-payload.interface'
 
 /**
@@ -14,6 +15,10 @@ import type { JwtPayload } from '../interfaces/jwt-payload.interface'
  * - roles
  * - permissions (pre-calculados)
  *
+ * Extrae el token de:
+ * 1. Cookie 'accessToken' (prioritario)
+ * 2. Header Authorization (fallback)
+ *
  * Para datos completos del usuario, usar UsersService.findById()
  * en endpoints específicos que lo necesiten.
  */
@@ -21,7 +26,14 @@ import type { JwtPayload } from '../interfaces/jwt-payload.interface'
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        // 1. Intentar desde cookie (prioritario para Next.js)
+        (request: Request) => {
+          return request?.cookies?.['accessToken'] as string | null
+        },
+        // 2. Fallback: desde header Authorization
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret',
     })
@@ -33,7 +45,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * ✅ SIN CONSULTAR DB - Máxima velocidad
    * El JWT ya tiene roles y permisos pre-calculados
    */
-  async validate(payload: JwtPayload): Promise<JwtPayload> {
+  validate(payload: JwtPayload): JwtPayload {
     // Validaciones básicas del payload
     if (!payload.sub || !payload.roles) {
       throw new UnauthorizedException('Token inválido: faltan datos requeridos')

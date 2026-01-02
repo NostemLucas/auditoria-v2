@@ -1,11 +1,12 @@
-import {
-  Injectable,
-  Inject,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Injectable, Inject } from '@nestjs/common'
 import type { IUsersRepository } from '../repositories/users-repository.interface'
 import type { UserEntity } from '../entities/user.entity'
+import {
+  EmailAlreadyExistsException,
+  UsernameAlreadyExistsException,
+  CiAlreadyExistsException,
+  UserNotFoundByIdException,
+} from '../exceptions'
 
 /**
  * Servicio de validaciones reutilizables para usuarios
@@ -26,7 +27,9 @@ export class UsersValidationService {
    *
    * @param data - Datos a validar (email, username, ci)
    * @param excludeId - ID a excluir de la validación (útil para updates)
-   * @throws ConflictException si algún campo ya existe
+   * @throws EmailAlreadyExistsException si el email ya existe
+   * @throws UsernameAlreadyExistsException si el username ya existe
+   * @throws CiAlreadyExistsException si el CI ya existe
    */
   async validateUniqueness(
     data: {
@@ -42,7 +45,7 @@ export class UsersValidationService {
         excludeId,
       )
       if (exists) {
-        throw new ConflictException('El email ya está registrado')
+        throw new EmailAlreadyExistsException(data.email, excludeId)
       }
     }
 
@@ -52,14 +55,14 @@ export class UsersValidationService {
         excludeId,
       )
       if (exists) {
-        throw new ConflictException('El username ya está en uso')
+        throw new UsernameAlreadyExistsException(data.username, excludeId)
       }
     }
 
     if (data.ci) {
       const exists = await this.usersRepository.existsByCI(data.ci, excludeId)
       if (exists) {
-        throw new ConflictException('El CI ya está registrado')
+        throw new CiAlreadyExistsException(data.ci, excludeId)
       }
     }
   }
@@ -69,13 +72,13 @@ export class UsersValidationService {
    *
    * @param userId - ID del usuario
    * @returns UserEntity encontrado
-   * @throws NotFoundException si el usuario no existe
+   * @throws UserNotFoundByIdException si el usuario no existe
    */
   async ensureUserExists(userId: string): Promise<UserEntity> {
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {
-      throw new NotFoundException(`Usuario con ID ${userId} no encontrado`)
+      throw new UserNotFoundByIdException(userId)
     }
 
     return user

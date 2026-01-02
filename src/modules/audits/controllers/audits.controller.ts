@@ -10,14 +10,57 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common'
+import { CurrentUser } from '@auth/decorators/current-user.decorator'
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger'
 import { AuditsService } from '../services/audits.service'
-import { CreateAuditDto, UpdateAuditDto } from '../dtos'
+import {
+  CreateAuditDto,
+  UpdateAuditDto,
+  PlanAuditDto,
+  RequestClosureDto,
+  CloseAuditDto,
+  CancelAuditDto,
+  ConfigureAuditWeightsDto,
+  CopyWeightsDto,
+} from '../dtos'
+import {
+  PlanAuditHandler,
+  StartAuditHandler,
+  RequestClosureHandler,
+  ApproveClosureHandler,
+  CloseAuditHandler,
+  CancelAuditHandler,
+  ConfigureWeightsHandler,
+  CopyWeightsHandler,
+  PlanAuditCommand,
+  StartAuditCommand,
+  RequestClosureCommand,
+  ApproveClosureCommand,
+  CloseAuditCommand,
+  CancelAuditCommand,
+  ConfigureWeightsCommand,
+  CopyWeightsCommand,
+} from '../use-cases'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { AuditStandardWeightEntity } from '../entities/audit-standard-weight.entity'
 
 @ApiTags('audits')
 @Controller('audits')
 export class AuditsController {
-  constructor(private readonly auditsService: AuditsService) {}
+  constructor(
+    private readonly auditsService: AuditsService,
+    private readonly planAuditHandler: PlanAuditHandler,
+    private readonly startAuditHandler: StartAuditHandler,
+    private readonly requestClosureHandler: RequestClosureHandler,
+    private readonly approveClosureHandler: ApproveClosureHandler,
+    private readonly closeAuditHandler: CloseAuditHandler,
+    private readonly cancelAuditHandler: CancelAuditHandler,
+    private readonly configureWeightsHandler: ConfigureWeightsHandler,
+    private readonly copyWeightsHandler: CopyWeightsHandler,
+    @InjectRepository(AuditStandardWeightEntity)
+    private readonly weightsRepository: Repository<AuditStandardWeightEntity>,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -156,5 +199,277 @@ export class AuditsController {
   @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
   async remove(@Param('id') id: string) {
     await this.auditsService.remove(id)
+  }
+
+  // ==================== NUEVOS ENDPOINTS DEL CICLO DE VIDA ====================
+
+  @Post(':id/plan')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Planificar una auditoría (DRAFT → PLANNED)',
+    description:
+      'Asigna equipo auditor, fechas y alcance. Cambia el estado de DRAFT a PLANNED.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Auditoría planificada exitosamente',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validación fallida o estado incorrecto',
+  })
+  @ApiResponse({ status: 403, description: 'Sin permisos' })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async planAudit(
+    @Param('id') auditId: string,
+    @Body() planAuditDto: PlanAuditDto,
+  ) {
+    const command = new PlanAuditCommand(
+      auditId,
+      planAuditDto.leadAuditorId,
+      planAuditDto.auditorIds,
+      new Date(planAuditDto.scheduledStartDate),
+      new Date(planAuditDto.scheduledEndDate),
+      planAuditDto.scope,
+      planAuditDto.organizationId,
+    )
+    return await this.planAuditHandler.execute(command)
+  }
+
+  @Post(':id/start')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Iniciar una auditoría (PLANNED → IN_PROGRESS)',
+    description:
+      'Inicia una auditoría planificada. Solo el lead auditor puede iniciar.',
+  })
+  @ApiResponse({ status: 200, description: 'Auditoría iniciada exitosamente' })
+  @ApiResponse({ status: 400, description: 'Estado incorrecto' })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo el lead auditor puede iniciar',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async startAudit(
+    @Param('id') auditId: string,
+    @CurrentUser('sub') userId: string,
+  ) {
+    const command = new StartAuditCommand(auditId, userId)
+    return await this.startAuditHandler.execute(command)
+  }
+
+  @Post(':id/request-closure')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Solicitar cierre de auditoría (IN_PROGRESS → PENDING_CLOSURE)',
+    description:
+      'Solicita el cierre de una auditoría. Ejecuta validaciones de cierre. Solo el lead auditor puede solicitar.',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Solicitud de cierre exitosa. Auditoría en estado PENDING_CLOSURE',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validaciones de cierre fallidas o estado incorrecto',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo el lead auditor puede solicitar cierre',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async requestClosure(
+    @Param('id') auditId: string,
+    @Body() requestClosureDto: RequestClosureDto,
+    @CurrentUser('sub') userId: string,
+  ) {
+    const command = new RequestClosureCommand(
+      auditId,
+      userId,
+      requestClosureDto.reportUrl,
+    )
+    return await this.requestClosureHandler.execute(command)
+  }
+
+  @Post(':id/approve-closure')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Aprobar cierre de auditoría (PENDING_CLOSURE)',
+    description:
+      'Aprueba el cierre de una auditoría en PENDING_CLOSURE. Paso previo al cierre definitivo.',
+  })
+  @ApiResponse({ status: 200, description: 'Cierre aprobado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Estado incorrecto' })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo el lead auditor puede aprobar',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async approveClosure(
+    @Param('id') auditId: string,
+    @CurrentUser('sub') userId: string,
+  ) {
+    const command = new ApproveClosureCommand(auditId, userId)
+    return await this.approveClosureHandler.execute(command)
+  }
+
+  @Post(':id/close')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Cerrar definitivamente una auditoría (PENDING_CLOSURE → CLOSED)',
+    description:
+      'Cierra definitivamente una auditoría. Ejecuta todas las validaciones y genera metadatos finales. Requiere aprobación previa.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Auditoría cerrada exitosamente con metadatos completos',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validaciones fallidas, falta aprobación o estado incorrecto',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo el lead auditor puede cerrar',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async closeAudit(
+    @Param('id') auditId: string,
+    @Body() closeAuditDto: CloseAuditDto,
+    @CurrentUser('sub') userId: string,
+  ) {
+    const command = new CloseAuditCommand(
+      auditId,
+      userId,
+      closeAuditDto.reportUrl,
+    )
+    return await this.closeAuditHandler.execute(command)
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Cancelar una auditoría (Cualquier estado → CANCELLED)',
+    description:
+      'Cancela una auditoría en cualquier estado (excepto CLOSED). Solo el lead auditor puede cancelar.',
+  })
+  @ApiResponse({ status: 200, description: 'Auditoría cancelada exitosamente' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'No se puede cancelar (ya cerrada o ya cancelada) o falta razón',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo el lead auditor puede cancelar',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async cancelAudit(
+    @Param('id') auditId: string,
+    @Body() cancelAuditDto: CancelAuditDto,
+    @CurrentUser('sub') userId: string,
+  ) {
+    const command = new CancelAuditCommand(
+      auditId,
+      userId,
+      cancelAuditDto.cancellationReason,
+    )
+    return await this.cancelAuditHandler.execute(command)
+  }
+
+  // ============================================================
+  // WEIGHTS MANAGEMENT ENDPOINTS
+  // ============================================================
+
+  @Get(':id/weights')
+  @ApiOperation({
+    summary: 'Obtener pesos configurados de una auditoría',
+    description:
+      'Retorna los pesos asignados a cada estándar de la auditoría. Si no hay pesos configurados, retorna array vacío.',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Pesos de la auditoría (puede estar vacío si no hay configurados)',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async getAuditWeights(@Param('id') auditId: string) {
+    const weights = await this.weightsRepository.find({
+      where: { auditId },
+      order: { displayOrder: 'ASC', createdAt: 'ASC' },
+    })
+    return weights
+  }
+
+  @Post(':id/weights')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Configurar pesos de estándares para una auditoría',
+    description:
+      'Permite al Lead Auditor asignar ponderaciones específicas a cada estándar según las prioridades de la organización auditada. Solo disponible en estados DRAFT o PLANNED.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Pesos configurados exitosamente',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Datos inválidos, estado incorrecto, o faltan pesos para algunos estándares',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo el lead auditor puede configurar pesos',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async configureWeights(
+    @Param('id') auditId: string,
+    @Body() configureWeightsDto: ConfigureAuditWeightsDto,
+    @CurrentUser('sub') userId: string,
+  ) {
+    const command = new ConfigureWeightsCommand(
+      auditId,
+      configureWeightsDto.weights,
+      userId,
+      configureWeightsDto.normalizationMode || 'auto',
+    )
+    return await this.configureWeightsHandler.execute(command)
+  }
+
+  @Post(':id/weights/copy')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Copiar pesos desde una plantilla o auditoría previa',
+    description:
+      'Facilita la configuración de pesos reutilizando configuraciones previas. Permite copiar desde la plantilla de la auditoría o desde una auditoría previa. Opcionalmente puede aplicar un factor de ajuste.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Pesos copiados y configurados exitosamente',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Fuente inválida, sin pesos configurados, o sin estándares coincidentes',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo el lead auditor puede configurar pesos',
+  })
+  @ApiResponse({ status: 404, description: 'Auditoría no encontrada' })
+  async copyWeights(
+    @Param('id') auditId: string,
+    @Body() copyWeightsDto: CopyWeightsDto,
+    @CurrentUser('sub') userId: string,
+  ) {
+    const command = new CopyWeightsCommand(
+      auditId,
+      copyWeightsDto.source,
+      userId,
+      copyWeightsDto.sourceAuditId,
+      copyWeightsDto.adjustmentFactor || 1.0,
+    )
+    return await this.copyWeightsHandler.execute(command)
   }
 }

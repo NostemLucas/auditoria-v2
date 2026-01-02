@@ -4,9 +4,12 @@ import { ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { LoggerService } from '@core'
 import { useContainer } from 'class-validator'
+import { NestExpressApplication } from '@nestjs/platform-express'
+import { join } from 'path'
+import cookieParser from 'cookie-parser'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: false,
   })
 
@@ -19,15 +22,25 @@ async function bootstrap() {
   // Usar nuestro logger custom
   app.useLogger(logger)
 
-  // Configurar CORS
+  // Middleware para cookies
+  app.use(cookieParser())
+
+  // Configurar CORS (compatible con cookies)
   const corsOrigins = process.env.CORS_ORIGIN?.split(',') || [
     'http://localhost:4200',
+    'http://localhost:3000', // Next.js default
   ]
   app.enableCors({
     origin: corsOrigins,
-    credentials: process.env.CORS_CREDENTIALS === 'true',
+    credentials: true, // Requerido para cookies
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+
+  // Servir archivos estáticos desde /uploads
+  const uploadsPath = join(process.cwd(), 'uploads')
+  app.useStaticAssets(uploadsPath, {
+    prefix: '/uploads',
   })
 
   // Habilitar validación global

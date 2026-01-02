@@ -12,6 +12,7 @@ import { ReportsModule } from '@reports'
 import databaseConfig from '@core/config/database.config'
 import googleConfig from '@core/config/google.config'
 import { LoggerModule, CoreModule } from '@core'
+import { FilesModule } from '@core/files'
 import { AuthModule } from '@auth'
 import { AuthorizationModule } from '@authorization'
 import { APP_GUARD } from '@nestjs/core'
@@ -31,6 +32,7 @@ import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard'
     }),
     CoreModule,
     LoggerModule,
+    FilesModule,
     AuthorizationModule,
     AuthModule,
     UsersModule,

@@ -1,98 +1,175 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# ATR - Audit & Assessment System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Sistema de auditoría y evaluación construido con NestJS, TypeScript, TypeORM y PostgreSQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Descripción
 
-## Description
+Sistema empresarial para gestión de auditorías, evaluaciones y cumplimiento normativo. Implementa Clean Architecture con patrones CQRS, autenticación stateless JWT, y sistema de roles y permisos granulares.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Características Principales
 
-## Project setup
+- **Autenticación y Autorización**: JWT stateless con refresh tokens, sistema RBAC (Role-Based Access Control)
+- **Arquitectura Escalable**: Clean Architecture + CQRS pattern
+- **Testing**: Suite completa de tests unitarios con 100% coverage en módulos principales
+- **TypeScript**: Tipado estricto con ESLint configurado
+- **Base de Datos**: PostgreSQL con TypeORM y migrations
 
-```bash
-$ npm install
-```
+## Documentación
 
-## Compile and run the project
+### Arquitectura
 
-```bash
-# development
-$ npm run start
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Visión general de la arquitectura del proyecto
 
-# watch mode
-$ npm run start:dev
+### Guías de Desarrollo
 
-# production mode
-$ npm run start:prod
-```
+Todas las guías están organizadas en [`/docs/guides/`](./docs/guides/):
 
-## Run tests
+- **Autenticación y Autorización**
+  - [AUTH-SYSTEM-GUIDE.md](./docs/guides/AUTH-SYSTEM-GUIDE.md) - Sistema de autenticación completo
+  - [STATELESS-AUTH-GUIDE.md](./docs/guides/STATELESS-AUTH-GUIDE.md) - Autenticación JWT stateless
+  - [ROLES-PERMISSIONS-GUIDE.md](./docs/guides/ROLES-PERMISSIONS-GUIDE.md) - Sistema de roles y permisos
+  - [PERMISSION-HELPERS-GUIDE.md](./docs/guides/PERMISSION-HELPERS-GUIDE.md) - Helpers de permisos reutilizables
+  - [AUTHORIZATION-IMPROVEMENTS.md](./docs/guides/AUTHORIZATION-IMPROVEMENTS.md) - Mejoras de autorización
 
-```bash
-# unit tests
-$ npm run test
+- **Patrones y Testing**
+  - [REPOSITORY-PATTERN.md](./docs/guides/REPOSITORY-PATTERN.md) - Patrón Repository
+  - [TESTING-GUIDE.md](./docs/guides/TESTING-GUIDE.md) - Guía general de testing
+  - [TESTING-USE-CASES-GUIDE.md](./docs/guides/TESTING-USE-CASES-GUIDE.md) - Testing de use cases
 
-# e2e tests
-$ npm run test:e2e
+- **Migración y Refactorización**
+  - [USE-CASES-MIGRATION-GUIDE.md](./docs/guides/USE-CASES-MIGRATION-GUIDE.md) - Migrar servicios a use cases
+  - [MIGRATION-PATTERNS.md](./docs/guides/MIGRATION-PATTERNS.md) - Patrones de migración
 
-# test coverage
-$ npm run test:cov
-```
+### Resumen de Refactorización
 
-## Deployment
+- [RESUMEN-REFACTORIZACION.md](./docs/summary/RESUMEN-REFACTORIZACION.md) - Resumen completo de la refactorización del módulo Users
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Configuración del Proyecto
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 1. Instalar Dependencias
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 2. Configurar Variables de Entorno
 
-## Resources
+Copia el archivo `.env.example` a `.env` y configura las variables:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+cp .env.example .env
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Edita `.env` con tus configuraciones de base de datos, JWT, etc.
 
-## Support
+### 3. Iniciar Base de Datos (Docker)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+docker-compose up -d
+```
 
-## Stay in touch
+### 4. Ejecutar Migraciones
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npm run migration:run
+```
 
-## License
+### 5. (Opcional) Ejecutar Seeds
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+npm run seed:run
+```
+
+## Desarrollo
+
+```bash
+# modo desarrollo con hot-reload
+npm run start:dev
+
+# compilar proyecto
+npm run build
+
+# modo producción
+npm run start:prod
+```
+
+## Testing
+
+```bash
+# tests unitarios
+npm test
+
+# tests con watch mode
+npm run test:watch
+
+# coverage
+npm run test:cov
+
+# tests específicos
+npm test users
+npm test create-user
+```
+
+Consulta [TESTING-GUIDE.md](./docs/guides/TESTING-GUIDE.md) para más información sobre testing.
+
+## Linting y Formato
+
+```bash
+# verificar lint
+npm run lint
+
+# auto-fix lint
+npm run lint --fix
+
+# formatear código
+npm run format
+```
+
+## Commits
+
+Este proyecto usa **Conventional Commits** con Commitizen. Para hacer commits:
+
+```bash
+# agregar cambios
+git add .
+
+# commit interactivo (recomendado)
+npm run commit
+```
+
+Ver [CONTRIBUTING.md](./CONTRIBUTING.md) para más detalles sobre el flujo de trabajo.
+
+## Estructura del Proyecto
+
+```
+src/
+├── @core/                 # Core compartido (email, config, etc.)
+├── @shared/               # Código compartido entre módulos
+└── modules/               # Módulos de dominio
+    ├── auth/              # Autenticación (login, register, JWT)
+    ├── authorization/     # Autorización (roles, permisos)
+    └── users/             # Gestión de usuarios (CQRS)
+        ├── use-cases/     # Commands y Queries
+        ├── services/      # Servicios de validación
+        ├── repositories/  # Acceso a datos
+        ├── entities/      # Entidades TypeORM
+        └── testing/       # Mocks y helpers de testing
+
+docs/
+├── guides/                # Guías de desarrollo
+└── summary/               # Resúmenes de refactorización
+```
+
+## Tecnologías
+
+- **Framework**: NestJS 10
+- **Lenguaje**: TypeScript 5
+- **Base de Datos**: PostgreSQL + TypeORM
+- **Autenticación**: JWT (access + refresh tokens)
+- **Testing**: Jest
+- **Linting**: ESLint + Prettier
+- **Commits**: Conventional Commits + Commitizen + Husky
+
+## Licencia
+
+MIT

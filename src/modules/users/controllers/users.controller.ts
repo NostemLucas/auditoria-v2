@@ -9,8 +9,10 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UploadedFile,
 } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { UploadAvatar } from '@core/files'
 import { UserFactory } from '../factories/user.factory'
 import { CreateUserDto, UpdateUserDto } from '../dtos'
 
@@ -24,6 +26,8 @@ import {
   DeleteUserHandler,
   DeactivateUserCommand,
   DeactivateUserHandler,
+  UploadAvatarCommand,
+  UploadAvatarHandler,
 } from '../use-cases/commands'
 
 // Query Handlers
@@ -51,6 +55,7 @@ export class UsersController {
     private readonly updateUserHandler: UpdateUserHandler,
     private readonly deleteUserHandler: DeleteUserHandler,
     private readonly deactivateUserHandler: DeactivateUserHandler,
+    private readonly uploadAvatarHandler: UploadAvatarHandler,
 
     // Query Handlers
     private readonly getUserHandler: GetUserHandler,
@@ -151,6 +156,22 @@ export class UsersController {
   async deactivate(@Param('id') id: string) {
     const command = new DeactivateUserCommand(id)
     const user = await this.deactivateUserHandler.execute(command)
+    return this.userFactory.toResponse(user)
+  }
+
+  @Post(':id/avatar')
+  @HttpCode(HttpStatus.OK)
+  @UploadAvatar() // ✅ Decorador personalizado - Todo configurado automáticamente
+  @ApiOperation({ summary: 'Subir avatar de usuario' })
+  @ApiResponse({ status: 200, description: 'Avatar subido exitosamente' })
+  @ApiResponse({ status: 400, description: 'Archivo inválido' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  async uploadAvatar(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File, // ✅ Sin validadores - se manejan en el handler
+  ) {
+    const command = new UploadAvatarCommand(id, file)
+    const user = await this.uploadAvatarHandler.execute(command)
     return this.userFactory.toResponse(user)
   }
 }

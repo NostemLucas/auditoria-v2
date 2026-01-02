@@ -23,11 +23,12 @@ export enum AuditType {
 }
 
 export enum AuditStatus {
-  BORRADOR = 'borrador',
-  EN_PROGRESO = 'en_progreso',
-  COMPLETADA = 'completada',
-  APROBADA = 'aprobada',
-  CERRADA = 'cerrada',
+  DRAFT = 'draft', // Borrador
+  PLANNED = 'planned', // Planificada
+  IN_PROGRESS = 'in_progress', // En progreso
+  PENDING_CLOSURE = 'pending_closure', // Pendiente de cierre
+  CLOSED = 'closed', // Cerrada
+  CANCELLED = 'cancelled', // Cancelada
 }
 
 @Entity('audits')
@@ -80,8 +81,12 @@ export class AuditEntity {
   endDate: Date | null
 
   // Estado
-  @Column({ type: 'enum', enum: AuditStatus, default: AuditStatus.BORRADOR })
+  @Column({ type: 'enum', enum: AuditStatus, default: AuditStatus.DRAFT })
   status: AuditStatus
+
+  // Alcance (scope) de la auditoría
+  @Column({ type: 'text', nullable: true })
+  scope: string | null
 
   // Organización auditada
   @Column({ type: 'uuid' })
@@ -122,6 +127,43 @@ export class AuditEntity {
 
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   progress: number // Porcentaje de evaluaciones completadas
+
+  // Metadatos de cierre
+  @Column({ type: 'jsonb', nullable: true })
+  closureMetadata: {
+    closedAt: Date
+    closedBy: string
+    totalEvaluations: number
+    totalFindings: number
+    nonConformitiesCount: {
+      critical: number
+      major: number
+      minor: number
+    }
+    conformitiesPercentage: number
+    requiresFollowUp: boolean
+    reportUrl?: string
+  } | null
+
+  // Aprobación de cierre
+  @Column({ type: 'timestamp', nullable: true })
+  closureApprovedAt: Date | null
+
+  @Column({ type: 'uuid', nullable: true })
+  closureApprovedBy: string | null
+
+  @ManyToOne(() => UserEntity, { nullable: true })
+  @JoinColumn({ name: 'closureApprovedBy' })
+  closureApprover: UserEntity | null
+
+  // Metadatos de cancelación
+  @Column({ type: 'jsonb', nullable: true })
+  cancellationMetadata: {
+    cancelledAt: Date
+    cancelledBy: string
+    cancellationReason: string
+    previousStatus: AuditStatus
+  } | null
 
   // Evaluaciones
   @OneToMany(() => EvaluationEntity, (evaluation) => evaluation.audit)

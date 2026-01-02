@@ -17,6 +17,7 @@ import {
   UpdateUserHandler,
   DeleteUserHandler,
   DeactivateUserHandler,
+  UploadAvatarHandler,
 } from './use-cases/commands'
 
 // Query Handlers
@@ -49,6 +50,7 @@ import {
     UpdateUserHandler,
     DeleteUserHandler,
     DeactivateUserHandler,
+    UploadAvatarHandler,
 
     // Query Handlers
     GetUserHandler,

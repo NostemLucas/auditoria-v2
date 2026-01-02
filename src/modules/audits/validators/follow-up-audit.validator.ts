@@ -45,8 +45,8 @@ export class FollowUpAuditValidator implements ValidatorConstraintInterface {
       return false
     }
 
-    // Validar que la auditoría padre esté completada
-    if (parentAudit.status !== AuditStatus.COMPLETADA) {
+    // Validar que la auditoría padre esté cerrada
+    if (parentAudit.status !== AuditStatus.CLOSED) {
       return false
     }
 
